@@ -6,7 +6,7 @@ export default function Home() {
   const [message, setMessage] = useState("Loading...")
 
   useEffect(() => {
-    fetch(process.env.NEXT_PUBLIC_API_URL + "/")
+    fetch("/api/backend")
       .then(res => res.json())
       .then(data => setMessage(data.message))
       .catch(() => setMessage("Backend not reachable"))
