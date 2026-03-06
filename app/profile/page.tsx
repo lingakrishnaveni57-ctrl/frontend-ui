@@ -5,7 +5,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import Navbar from "../components/Navbar";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://13.201.22.139:8000";
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<any>(null);
@@ -21,11 +21,14 @@ export default function ProfilePage() {
 
     const fetchProfile = async () => {
       try {
+        console.log("Calling API:", `${API_URL}/profile`);
         const res = await axios.get(`${API_URL}/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log("Profile response:", res.data);
         setProfile(res.data);
       } catch (err: any) {
+        console.error("Profile fetch failed:", err.response?.data || err.message);
         setError(err.response?.data?.detail || "Failed to fetch profile");
       }
     };
@@ -71,8 +74,8 @@ export default function ProfilePage() {
       <Navbar />
       <div className="flex flex-col items-center justify-center min-h-screen">
         <h1 className="text-2xl font-bold mb-4">Profile</h1>
-        <p><strong>Name:</strong> {profile.name}</p>
         <p><strong>Email:</strong> {profile.email}</p>
+        <p><strong>Verified:</strong> {profile.verified ? "Yes" : "No"}</p>
         <button
           onClick={handleLogout}
           className="mt-6 bg-red-600 text-white p-2 rounded hover:bg-red-700"
