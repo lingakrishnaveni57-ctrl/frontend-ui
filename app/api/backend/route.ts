@@ -1,15 +1,12 @@
-export async function GET() {
-  const response = await fetch("http://13.201.22.139:8000");
-  const data = await response.json();
+import { BACKEND_URL } from "./config";
 
-  return Response.json(data);
-export async function POST(req: Request) {
-  const body = await req.json();
-  const res = await fetch("http://13.201.22.139:8000/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  return Response.json(await res.json());
+export async function GET() {
+  try {
+    const res = await fetch(`${BACKEND_URL}/`);
+    const data = await res.json();
+    return Response.json(data, { status: res.status });
+  } catch (error) {
+    return Response.json({ error: "Failed to reach backend" }, { status: 500 });
+  }
 }
 
