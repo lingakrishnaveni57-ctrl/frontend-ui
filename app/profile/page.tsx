@@ -1,33 +1,76 @@
 "use client";
+
 import { useEffect, useState } from "react";
-import { getProfile } from "../api/backend/auth";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<any>(null);
-  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
-      setMessage("Not logged in");
+      router.push("/login");
       return;
     }
-    getProfile(token)
-      .then(res => setProfile(res.data))
-      .catch(() => setMessage("Failed to fetch profile"));
-  }, []);
+
+    const fetchProfile = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setProfile(res.data);
+      } catch (err: any) {
+        setError(err.response?.data?.detail || "Failed to fetch profile");
+      }
+    };
+
+    fetchProfile();
+  }, [router]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token"); // clear JWT
+    router.push("/login");            // redirect to login
+  };
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <h1 className="text-red-500">{error}</h1>
+        <button
+          onClick={handleLogout}
+          className="mt-4 bg-gray-600 text-white p-2 rounded hover:bg-gray-700"
+        >
+          Logout
+        </button>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <h1>Loading profile...</h1>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <h1>Profile</h1>
-      {profile ? (
-        <div>
-          <p>Email: {profile.email}</p>
-          <p>Verified: {profile.verified ? "Yes" : "No"}</p>
-        </div>
-      ) : (
-        <p>{message}</p>
-      )}
+    <div className="flex flex-col items-center justify-center min-h-screen">
+      <h1 className="text-2xl font-bold mb-4">Profile</h1>
+      <p><strong>Name:</strong> {profile.name}</p>
+      <p><strong>Email:</strong> {profile.email}</p>
+
+      <button
+        onClick={handleLogout}
+        className="mt-6 bg-red-600 text-white p-2 rounded hover:bg-red-700"
+      >
+        Logout
+      </button>
     </div>
   );
 }

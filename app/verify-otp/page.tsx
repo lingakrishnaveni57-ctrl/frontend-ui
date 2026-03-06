@@ -1,29 +1,66 @@
 "use client";
+
 import { useState } from "react";
-import { verifyOtp } from "../api/backend/auth";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function VerifyOtpPage() {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
-  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const router = useRouter();
 
-  async function handleVerify() {
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
     try {
-      await verifyOtp(email, otp);
-      setMessage("Account verified! You can now login.");
-      window.location.href = "/login";
-    } catch (err) {
-      setMessage("Verification failed");
+      await axios.post(`${API_URL}/verify`, {
+        email,
+        otp,
+      });
+
+      setSuccess("OTP verified successfully! You can now login.");
+      // Redirect to login page
+      router.push("/login");
+    } catch (err: any) {
+      setError(err.response?.data?.detail || "Verification failed");
     }
-  }
+  };
 
   return (
-    <div>
-      <h1>Verify OTP</h1>
-      <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
-      <input type="text" placeholder="OTP" value={otp} onChange={e => setOtp(e.target.value)} />
-      <button onClick={handleVerify}>Verify</button>
-      <p>{message}</p>
+    <div className="flex flex-col items-center justify-center min-h-screen">
+      <h1 className="text-2xl font-bold mb-4">Verify OTP</h1>
+      <form onSubmit={handleVerify} className="flex flex-col gap-4 w-64">
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="border p-2 rounded"
+          required
+        />
+        <input
+          type="text"
+          placeholder="OTP"
+          value={otp}
+          onChange={(e) => setOtp(e.target.value)}
+          className="border p-2 rounded"
+          required
+        />
+        <button
+          type="submit"
+          className="bg-purple-600 text-white p-2 rounded hover:bg-purple-700"
+        >
+          Verify
+        </button>
+      </form>
+      {error && <p className="text-red-500 mt-2">{error}</p>}
+      {success && <p className="text-green-500 mt-2">{success}</p>}
     </div>
   );
 }
